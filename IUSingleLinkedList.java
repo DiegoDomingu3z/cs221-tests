@@ -1,4 +1,5 @@
 
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
@@ -232,7 +233,6 @@ public class IUSingleLinkedList<T> implements  IndexedUnsortedList<T> {
     public int indexOf(T element) {
         Node<T> currentNode = head;
         int currentIndex = 0;
-        /* Seach while we still haven't found the node or we have not reached the end of the linked list */
         while (currentNode != null && !currentNode.getElement().equals(element)) { 
             currentNode = currentNode.getNextNode();
             currentIndex++;
@@ -292,53 +292,80 @@ public class IUSingleLinkedList<T> implements  IndexedUnsortedList<T> {
 
     @Override
     public Iterator<T> iterator() {
-        return new IUSingleLinkedListIterator();
+        return new SLLIterator();
     }
 
     @Override
     public ListIterator<T> listIterator() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public ListIterator<T> listIterator(int startingIndex) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException();
     }
 
-    private class IUSingleLinkedListIterator implements Iterator<T> {
+    /* Iterator for IUSingleLinkedList */
+    private class SLLIterator implements Iterator<T> {
         private Node<T> nextNode;
-        private Node<T> lastReturnedNode;
-        private int nextIndex;
-
-        public IUSingleLinkedListIterator() {
+        private boolean canRemove;
+        private int iterModCount;
+        /* Initialize Iterator before first element */
+        public SLLIterator(){
             nextNode = head;
-            lastReturnedNode = null;
-            nextIndex = 0;
+            canRemove = false;
+            iterModCount = modCount;
         }
 
         @Override
         public boolean hasNext() {
+            if (iterModCount != modCount){
+                throw new ConcurrentModificationException();
+            }
             return nextNode != null;
         }
-
         @Override
         public T next() {
-            if (!hasNext()) {
+            if(!hasNext()){
                 throw new NoSuchElementException();
             }
-
-            lastReturnedNode = nextNode;
+            T retVal = nextNode.getElement();
             nextNode = nextNode.getNextNode();
-            nextIndex++;
-            return lastReturnedNode.getElement();
-        }  
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
+            canRemove = true;
+            return retVal;
         }
 
-       
+        @Override
+        public void remove(){
+            if (iterModCount != modCount) { // Iterator's existential crisis
+                throw new ConcurrentModificationException();
+            }
+            if(!canRemove){ // is this method call valid
+                throw new IllegalStateException();
+            }
+            canRemove = false;
+            if (head.getNextNode() == nextNode) {
+                head = nextNode;
+                if (head == null){
+                    tail = null;
+                }
+            } else {
+
+                Node<T> prevPrevNode = head;
+                while(prevPrevNode.getNextNode().getNextNode() != nextNode){
+                    prevPrevNode = prevPrevNode.getNextNode();
+                }
+                prevPrevNode.setNextNode(nextNode);
+                if(nextNode == null){
+                    tail = prevPrevNode;
+                }
+            }
+            modCount++;
+            iterModCount++;
+            size--;
+        
+        }
+        
     }
     
 }
