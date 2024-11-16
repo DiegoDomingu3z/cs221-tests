@@ -21,7 +21,7 @@ public class ListTester {
         goodList, badList, arrayList, singleLinkedList, doubleLinkedList
     };
     // TODO: THIS IS WHERE YOU CHOOSE WHICH LIST TO TEST
-    private final static ListToUse LIST_TO_USE = ListToUse.singleLinkedList;
+    private final static ListToUse LIST_TO_USE = ListToUse.doubleLinkedList;
 
     // possible results expected in tests
     private enum Result {
@@ -285,6 +285,25 @@ public class ListTester {
         }
         return listToUse;
     }
+    
+    /*
+     * Scenario: [A,B] -< listIerator removes A after previous -> [B]
+     * @return [B] after listIterator removes A
+     */
+    private IndexedUnsortedList<Integer> AB_ListIterPreviousARemoveA (){
+        IndexedUnsortedList<Integer> list = newList();
+        list.add(ELEMENT_A);
+        list.add(ELEMENT_B);
+        ListIterator<Integer> lit = list.listIterator();
+        lit.previous();
+        lit.remove();
+        return list;
+    }
+
+    private Scenario<Integer> AB_ListIterPreviousARemoveA = () -> AB_ListIterPreviousARemoveA();
+
+
+
     // The following creates a "lambda" reference that allows us to pass a scenario
     //  builder method as an argument. You don't need to worry about how it works -
     //  just make sure each scenario building method has a corresponding Scenario 
